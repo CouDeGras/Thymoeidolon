@@ -27,8 +27,25 @@ echo "📶 STA target SSID:     $SSID_STA"
 echo "📡 AP SSID (fallback):  $SSID_AP"
 
 # 1. Install packages
-apt update
-apt install -y wpa_supplicant hostapd nodogsplash nginx iptables-persistent
+# 1. Install the helper to add repos
+sudo apt update
+sudo apt install -y software-properties-common
+
+# 2. Enable Universe
+sudo add-apt-repository universe
+
+# 3. Refresh and install the correct packages
+sudo apt update
+sudo apt install -y wpasupplicant hostapd nginx iptables-persistent
+ 
+sudo apt install -y build-essential libmicrohttpd-dev libssl-dev git  
+git clone https://github.com/nodogsplash/nodogsplash.git
+cd nodogsplash
+make
+sudo make install
+which nodogsplash       # should return /usr/local/sbin/nodogsplash
+nodogsplash -v          # prints version (e.g., 3.3.3-beta)
+
 
 # 2. Nginx config → serve YOUR portal repo
 NGINX_CONF=/etc/nginx/sites-available/portal
