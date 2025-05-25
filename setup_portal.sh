@@ -1,61 +1,108 @@
-#!/bin/bash
-# Run once (as root). Then: sudo reboot
-set -e
+#!/usr/bin/env bash
+#
+# One-time installer:  ttyd • FileBrowser • nginx • Wi-Fi-or-AP captive portal
+# Run as root:   sudo ./setup_portal.sh [wlan-iface]
+# After it finishes →  sudo reboot
+#
+set -euo pipefail
 
-# 1️⃣ Parameters
+# ────────────────────────── 0) must be root ──────────────────────────
+if [[ $EUID -ne 0 ]]; then
+  echo "⚠️  Please run this script as root (e.g. with sudo)."
+  exit 1
+fi
+
+# ----------------------------------------------------------------------
+# 1) PARAMETERS  (you may tweak here)
+# ----------------------------------------------------------------------
 WIFI_IFACE="${1:-wlan0}"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PORTAL_DIR="$SCRIPT_DIR"
 
+# STA (client) network to try first
 SSID_STA="Oneirodyne"
 PSK_STA="Oneirodyne"
 
+# AP (fallback) settings
 SSID_AP="Thymoeidolon"
 CHANNEL=6
 STATIC_NET="192.168.50.1/24"
 STATIC_IP="${STATIC_NET%%/*}"
 
-echo "🔧 Interface:       $WIFI_IFACE"
-echo "🌐 Portal dir:     $PORTAL_DIR"
-echo "📶 STA SSID:       $SSID_STA"
-echo "📡 AP SSID:        $SSID_AP"
+# Portal root = folder where *this* script resides
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PORTAL_DIR="$SCRIPT_DIR"
 
-# 2️⃣ Install prerequisites
-apt update
-apt install -y software-properties-common
+# ----------------------------------------------------------------------
+# 2) helper functions
+# ----------------------------------------------------------------------
+need_cmd()   { command -v "$1" &>/dev/null; }
+apt_install(){ DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "$@"; }
+
+echo "🔧  Interface            : $WIFI_IFACE"
+echo "📶  STA target SSID      : $SSID_STA"
+echo "📡  AP fallback SSID     : $SSID_AP"
+echo "🌐  Portal served from   : $PORTAL_DIR"
+echo
+
+# ----------------------------------------------------------------------
+# 3) base repo & CLI prerequisites
+# ----------------------------------------------------------------------
+apt-get update -qq
+apt_install software-properties-common curl gnupg2 ca-certificates lsb-release ubuntu-keyring build-essential git libmicrohttpd-dev libssl-dev
+
+# enable universe (hostapd/wpacli) + nginx mainline repo
 add-apt-repository -y universe
-apt update
-apt install -y wpasupplicant hostapd nginx iptables-persistent \
-               build-essential libmicrohttpd-dev libssl-dev git
+curl -fsSL https://nginx.org/keys/nginx_signing.key \
+  | gpg --dearmor -o /usr/share/keyrings/nginx-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] \
+http://nginx.org/packages/ubuntu $(lsb_release -cs) nginx" \
+  >/etc/apt/sources.list.d/nginx.list
+apt-get update -qq
 
-# 3️⃣ Build & install Nodogsplash from source
-git clone https://github.com/nodogsplash/nodogsplash.git /tmp/nodogsplash
-cd /tmp/nodogsplash
-make                                    # build the captive-portal daemon :contentReference[oaicite:0]{index=0}
-make install                            # installs /usr/local/sbin/nodogsplash, config → /etc/nodogsplash/ :contentReference[oaicite:1]{index=1}
-cd -
+# ----------------------------------------------------------------------
+# 4) snapd / ttyd / filebrowser
+# ----------------------------------------------------------------------
+if ! need_cmd snap; then
+  echo "🔧 Installing snapd …";           apt_install snapd
+fi
+if ! need_cmd ttyd; then
+  echo "🔧 Installing ttyd (snap) …";     snap install ttyd --classic
+fi
+if ! need_cmd filebrowser; then
+  echo "🔧 Installing File Browser …";    curl -fsSL https://raw.githubusercontent.com/filebrowser/get/master/get.sh | bash
+fi
+
+# ----------------------------------------------------------------------
+# 5) network & web packages
+# ----------------------------------------------------------------------
+apt_install wpasupplicant hostapd nginx iptables-persistent
+
+# ----------------------------------------------------------------------
+# 6) build & install Nodogsplash (captive portal daemon)
+# ----------------------------------------------------------------------
+echo "🔧 Building Nodogsplash …"
+git clone --depth 1 https://github.com/nodogsplash/nodogsplash.git /tmp/nodogsplash
+make -C /tmp/nodogsplash
+make -C /tmp/nodogsplash install      # → /usr/local/sbin/nodogsplash
 rm -rf /tmp/nodogsplash
 
-# 4️⃣ nginx: serve YOUR portal repo
-NGINX_CONF=/etc/nginx/sites-available/portal
-cat >"$NGINX_CONF" <<EOF
+# ----------------------------------------------------------------------
+# 7) nginx site: serve portal dir  (nginx.org uses /etc/nginx/conf.d)
+# ----------------------------------------------------------------------
+cat >/etc/nginx/conf.d/portal.conf <<EOF
 server {
     listen 80;
     server_name _;
     root $PORTAL_DIR;
     index index.html index.htm;
-    location / {
-        try_files \$uri \$uri/ =404;
-    }
+    location / { try_files \$uri \$uri/ =404; }
 }
 EOF
-ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/portal
-rm -f /etc/nginx/sites-enabled/default
 nginx -t
-systemctl enable --now nginx          # start & enable the web server
+systemctl enable --now nginx
 
-# 5️⃣ nodogsplash config (captive portal)
-mkdir -p /etc/nodogsplash
+# ----------------------------------------------------------------------
+# 8) nodogsplash default config (do not start yet)
+# ----------------------------------------------------------------------
 cat >/etc/nodogsplash/nodogsplash.conf <<EOF
 GatewayInterface $WIFI_IFACE
 MaxClients 50
@@ -63,7 +110,9 @@ ClientTimeout 300
 RedirectURL http://$STATIC_IP
 EOF
 
-# 6️⃣ hostapd: define fallback AP :contentReference[oaicite:2]{index=2}
+# ----------------------------------------------------------------------
+# 9) hostapd config for fallback AP
+# ----------------------------------------------------------------------
 cat >/etc/hostapd/hostapd.conf <<EOF
 interface=$WIFI_IFACE
 driver=nl80211
@@ -76,7 +125,9 @@ EOF
 sed -i 's|^#DAEMON_CONF.*|DAEMON_CONF="/etc/hostapd/hostapd.conf"|' /etc/default/hostapd
 systemctl disable hostapd
 
-# 7️⃣ wpa_supplicant: configure STA
+# ----------------------------------------------------------------------
+# 10) wpa_supplicant config for STA
+# ----------------------------------------------------------------------
 WPA_CONF="/etc/wpa_supplicant/wpa_supplicant-$WIFI_IFACE.conf"
 cat >"$WPA_CONF" <<EOF
 ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
@@ -91,18 +142,51 @@ network={
 EOF
 systemctl enable wpa_supplicant@"$WIFI_IFACE"
 
-# 8️⃣ Fallback logic script (runs each boot)  
+# ----------------------------------------------------------------------
+# 11) systemd units: ttyd & File Browser  (non-root user)
+# ----------------------------------------------------------------------
+USER_NAME=${SUDO_USER:-$USER}
+HOME_DIR=$(getent passwd "$USER_NAME" | cut -d: -f6)
+TTYD_BIN=$(command -v ttyd)
+FB_BIN=$(command -v filebrowser)
+
+cat >/etc/systemd/system/ttyd.service <<EOF
+[Unit]
+Description=ttyd – Terminal over Web (port 7681)
+After=network.target
+[Service]
+User=$USER_NAME
+ExecStart=$TTYD_BIN --writable --port 7681 /bin/bash -l
+Restart=on-failure
+[Install]
+WantedBy=multi-user.target
+EOF
+
+cat >/etc/systemd/system/filebrowser.service <<EOF
+[Unit]
+Description=File Browser ($HOME_DIR on :8080)
+After=network.target
+[Service]
+User=$USER_NAME
+WorkingDirectory=$HOME_DIR
+ExecStart=$FB_BIN -r $HOME_DIR --address 0.0.0.0 --port 8080 --database $HOME_DIR/.config/filebrowser.db
+Restart=on-failure
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# ----------------------------------------------------------------------
+# 12) fallback logic script (runs every boot)
+# ----------------------------------------------------------------------
 FALLBACK_SCRIPT=/usr/local/bin/wifi_or_ap.sh
 cat >"$FALLBACK_SCRIPT" <<EOF
-#!/bin/bash
-# Run at boot: try STA for 60s, else enable AP+portal
-
+#!/usr/bin/env bash
+set -e
 IFACE="$WIFI_IFACE"
 STA_SSID="$SSID_STA"
-AP_SSID="$SSID_AP"
 STATIC_NET="$STATIC_NET"
 
-# Try STA
+# Wait up to 60 s for STA
 for i in {1..60}; do
   if iw dev \$IFACE link | grep -q "\$STA_SSID"; then
     echo "✅ Joined \$STA_SSID"
@@ -111,51 +195,51 @@ for i in {1..60}; do
   sleep 1
 done
 
-echo "⚠️  STA failed—starting AP (\$AP_SSID)."
+echo "⚠️  Unable to join \$STA_SSID – switching to AP."
 
 # Stop STA
-systemctl stop wpa_supplicant@\$IFACE
+systemctl stop wpa_supplicant@\${IFACE} || true
 
-# Reset interface
+# Reset interface & assign static IP
 ip link set \$IFACE down
 ip addr flush dev \$IFACE
 ip link set \$IFACE up
-
-# Assign AP IP
 ip addr add \$STATIC_NET dev \$IFACE
 
-# Start AP + captive portal
+# Start hostapd + Nodogsplash
 systemctl start hostapd
 systemctl start nodogsplash
 EOF
 chmod +x "$FALLBACK_SCRIPT"
 
-# 9️⃣ systemd unit for fallback logic :contentReference[oaicite:3]{index=3}
-FALLBACK_SERVICE=/etc/systemd/system/fallback-ap.service
-cat >"$FALLBACK_SERVICE" <<EOF
+# ----------------------------------------------------------------------
+# 13) systemd service that calls the fallback script
+# ----------------------------------------------------------------------
+cat >/etc/systemd/system/fallback-ap.service <<EOF
 [Unit]
 Description=Fallback to AP if STA fails
 After=network-online.target
 Wants=network-online.target
-
 [Service]
 Type=oneshot
 RemainAfterExit=yes
 ExecStart=$FALLBACK_SCRIPT
-
 [Install]
 WantedBy=multi-user.target
 EOF
 
-# Reload systemd to pick up new unit
-systemctl daemon-reload
-systemctl enable fallback-ap.service
-
-# 🔟 IPTABLES: redirect HTTP → portal :contentReference[oaicite:4]{index=4}
+# ----------------------------------------------------------------------
+# 14) iptables DNAT → portal  (persist)
+# ----------------------------------------------------------------------
 iptables -t nat -A PREROUTING -i "$WIFI_IFACE" -p tcp --dport 80 \
-        -j DNAT --to-destination $STATIC_IP:80
+         -j DNAT --to-destination $STATIC_IP:80
 iptables -t nat -A POSTROUTING -j MASQUERADE
 netfilter-persistent save
 
-echo -e "\n✅ Installation complete. Reboot to apply:"
+# ----------------------------------------------------------------------
+# 15) enable / start everything
+# ----------------------------------------------------------------------
+systemctl daemon-reload
+systemctl enable --now ttyd.service filebrowser.service fallback-ap.service
+echo -e "\n✅  Installation complete.  Reboot now to put it into action:"
 echo "   sudo reboot"
