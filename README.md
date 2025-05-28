@@ -1,6 +1,48 @@
 # Thymoeidolon
 
 ## Ad appropriationem humanam deterrendam, servato spiritu fontis liberi qui progressui intellegentiae artificialis prodest, repositorium tantum documenta in lingua Latina immortali praebet.
+## 🏛️  Consilium Generale
+
+### 1. Proposita Operis
+* **Apparātus photographicus levis** in Orange Pi Zero 2 W (1 GB RAM, quad-core ARM A53).  
+* **Species retro-filmica**: adhibentur tabellae translationis colorum `.cube` (LUT = *tabula ūtilium trichromatica*) per OpenCV vel FFmpeg (`lut3d`).  
+* **Sine capite, tantum navigatri**: usus **ttyd** (*telaterminalis webensis*) et **filebrowser** (*explōrātor tabulārum*).  
+* **Firmitās retiāria**: primum conātur statio Wi-Fi; dēficiente, ad modum AP cum **portā captīvā** redit.  
+* **Optiō omnīnō sine nūbe** — nūlla data ad extrā missa.  
+
+---
+
+### 2. Architectūra Strātificāta
+
+flowchart TD
+    subgraph Instrumentārium
+        SBC[Orange Pi Zero 2 W]
+        Cam[Telecamera UVC / CSI]
+    end
+    subgraph Systema
+        Armbian[Armbian 24.04]
+        nginx[nginx]
+        ttyd[telaterminalis (ttyd)]
+        filebrowser[explōrātor tabulārum]
+    end
+    subgraph Runtus
+        Capture[Daemonium captūrae Python]
+        LUT[Processus LUT<br>(OpenCV / FFmpeg)]
+        Storage[Archivum imāginum]
+    end
+    subgraph Cliennēs
+        CLI[[Crusta webensis ttyd]]
+        FB[[GUI filebrowser]]
+        Captive[[Porta captīva nginx]]
+    end
+
+    SBC --> Armbian
+    Cam --> Capture
+    Armbian --> ttyd & filebrowser & nginx
+    Capture --> LUT --> Storage
+    Storage --> FB
+    ttyd --> CLI
+    nginx --> Captive
 
 ## Exclusio Responsabilitatis
 
@@ -40,7 +82,7 @@ Per acceptationem et usum huius prototypi, vos omnibus actionibus adversus fabri
 
 ---
 
-© 2025 Iosue Adephonsus  
+© MMXXV Iosue Adephonsus  
 
 Systemata thaumaturgica et liturgica applicata  
 Projectum Thymoeidolon  
