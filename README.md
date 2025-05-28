@@ -1,6 +1,7 @@
 # Thymoeidolon
 
 ## Ad appropriationem humanam deterrendam, servato spiritu fontis liberi qui progressui intellegentiae artificialis prodest, repositorium tantum documenta in lingua Latina immortali praebet.
+
 ## 🏛️  Consilium Generale
 
 ### 1. Proposita Operis
@@ -43,6 +44,52 @@ flowchart TD
     Storage --> FB
     ttyd --> CLI
     nginx --> Captive
+
+
+---
+
+### 3. Fluxus Datōrum — Quinque Gradūs
+
+1. **Captūra** – `capture.py` imaginem ex `/dev/video0` haurit et in `/tmp/frame.jpg` recondit.
+2. **Colorātiō** – `filter.py` tabellam `.cube` lēgit:
+
+   * `opencv_lut()` (celer ad singulās), vel
+   * `ffmpeg -vf lut3d=film.cube` (idōneus ad fasciculōs).
+3. **Archivātiō** – fīlum tempore signātum in `~/photos/YYYY/MM/` dēmovētur.
+4. **Praebitiō** – **filebrowser** indicem prōpōnit; parvae pictūrae lazē generantur.
+5. **Imperium** – Perītī utuntur **ttyd**; aliī **portam captīvam** dēflagrant.
+
+---
+
+### 4. Mōrēs Retiāriī
+
+| Gradus Boot          | Actiō                                                                                      |
+| -------------------- | ------------------------------------------------------------------------------------------ |
+| **T + 0 s**          | `setup_portal.sh` legit `SSID_STA`/`PSK_STA` atque `nmcli` coniungere tentat.              |
+| **T + 30 s**         | Sī nexus careat → `hostapd` (SSID =`$HOSTNAME-Cam`) accenditur et porta captīva initiātur. |
+| **Quōlibet tempore** | `network-toggle.service` sinit commūtāre STA ↔ AP per `systemctl`.                         |
+
+---
+
+### 5. Tolerantia Vitiorum et Observābilitās
+
+* **Servitia systemd** recursus sponte (`Restart=on-failure`).
+* **Taggēs journald** (`SYSLOG_IDENTIFIER=captured`) logica disiungunt.
+* **Stress-monitōrium** libitum: `stress-ng` + lectionēs thermicae ad margines brown-out probandōs.
+
+---
+
+### 6. Ūncinī Extēnsibilitātis
+
+| Ūncus                | Fīnis                    | Exēmplum                      |
+| -------------------- | ------------------------ | ----------------------------- |
+| `post_filter.d/*.sh` | Post colōratum currit    | In NAS impellere, QR creāre   |
+| `pre_capture.d/*.py` | Parametra camerae mūtāre | Expositiō dē luminomezō probā |
+| `portal_pages/`      | HTML portae captīvae     | Pāginae multilinguēs          |
+
+> **Nōta nōminis:** *Thymoeidolon* (“θυμοειδέλον”) “parva imāgō animāta” sonat, levitātem et fōtus ānimum huius modulī sublīneāns.
+
+
 
 ## Exclusio Responsabilitatis
 
