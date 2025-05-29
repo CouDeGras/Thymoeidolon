@@ -187,4 +187,9 @@ echo "✅ All set!"
 echo "   – ttyd      → http://<host>:7681"
 echo "   – filebrowser → http://<host>:8080 (serves $HOME_DIR)"
 echo
-echo "Check status with:  systemctl status ttyd filebrowser nginx smbd nmbd"
+systemctl status ttyd
+systemctl status filebrowser
+systemctl status nginx
+systemctl status smbd
+systemctl status nmbd
+echo
