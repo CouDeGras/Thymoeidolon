@@ -137,6 +137,48 @@ EOF
 # ─────────────────────────────────────────────────────────────
 # 7) enable & start services
 # ─────────────────────────────────────────────────────────────
+
+# ───────────────────────────────────────────────
+# Auto-detect current user
+USER_NAME="${SUDO_USER:-$USER}"
+HOME_DIR="/home/$USER_NAME"
+SHARE_NAME="${USER_NAME}Home"
+SMB_CONF="/etc/samba/smb.conf"
+
+# ───────────────────────────────────────────────
+echo "🔧 Installing Samba if not already present..."
+sudo apt update
+sudo apt install -y samba
+
+# ───────────────────────────────────────────────
+echo "📂 Setting permissions for guest access to $HOME_DIR..."
+sudo chmod o+rx "$HOME_DIR"
+
+# ───────────────────────────────────────────────
+echo "🧠 Backing up current smb.conf..."
+sudo cp "$SMB_CONF" "${SMB_CONF}.backup.$(date +%Y%m%d%H%M%S)"
+
+# ───────────────────────────────────────────────
+echo "📝 Adding Samba share definition for $USER_NAME..."
+
+sudo tee -a "$SMB_CONF" > /dev/null <<EOF
+
+[$SHARE_NAME]
+   path = $HOME_DIR
+   browsable = yes
+   read only = no
+   guest ok = yes
+   force user = $USER_NAME
+EOF
+
+# ───────────────────────────────────────────────
+echo "🔄 Restarting Samba services..."
+sudo systemctl restart smbd nmbd
+
+# ───────────────────────────────────────────────
+IP_ADDR=$(hostname -I | awk '{print $1}')
+echo "✅ Samba share '$SHARE_NAME' is live!"
+
 systemctl daemon-reload
 systemctl enable --now ttyd.service filebrowser.service
 
@@ -145,4 +187,4 @@ echo "✅ All set!"
 echo "   – ttyd      → http://<host>:7681"
 echo "   – filebrowser → http://<host>:8080 (serves $HOME_DIR)"
 echo
-echo "Check status with:  systemctl status ttyd filebrowser nginx"
+echo "Check status with:  systemctl status ttyd filebrowser nginx smbd nmbd"
