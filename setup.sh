@@ -142,7 +142,7 @@ EOF
 # Auto-detect current user
 USER_NAME="${SUDO_USER:-$USER}"
 HOME_DIR="/home/$USER_NAME"
-SHARE_NAME="${USER_NAME}Home"
+SHARE_NAME="Thymoeidolon"
 SMB_CONF="/etc/samba/smb.conf"
 
 # ───────────────────────────────────────────────
