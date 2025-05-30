@@ -16,8 +16,16 @@ if ! grep -q "Ubuntu" /etc/os-release; then
   exit 1
 fi
 
+
+# Determine the actual user's home directory even when run with sudo
+if [[ "$EUID" -eq 0 && -n "${SUDO_USER:-}" ]]; then
+  USER_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
+else
+  USER_HOME="$HOME"
+fi
+
 # Define base path
-BASE_DIR="$HOME/DCIM"
+BASE_DIR="$USER_HOME/DCIM"
 
 # Define subdirectories
 DIRS=(
@@ -36,7 +44,7 @@ for dir in "${DIRS[@]}"; do
   fi
 done
 
-echo "📁 DCIM folder structure set up successfully."
+echo "📁 DCIM folder structure set up successfully under: $BASE_DIR"
 
 # ─────────────────────────────────────────────────────────────
 # 1) helper utilities
