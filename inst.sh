@@ -238,12 +238,12 @@ systemctl restart smbd nmbd
 
 systemctl daemon-reload
 systemctl enable --now ttyd.service filebrowser.service
-
+IP_ADDR=$(hostname -I | awk '{print $1}')
 echo
 echo "✅ All set!"
 echo "   – ttyd      → http://$IP_ADDR:7681"
 echo "   – filebrowser → http://$IP_ADDR:8080 (serves $HOME_DIR)"
 # ───────────────────────────────────────────────
-IP_ADDR=$(hostname -I | awk '{print $1}')
+
 echo "✅ Samba share is live!"
 echo $IP_ADDR
