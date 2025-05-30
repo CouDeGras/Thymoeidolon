@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Deactivates (stops and disables) common web/file services
+# Temporarily stops services to save power
 
 set -euo pipefail
 
@@ -11,11 +11,10 @@ SERVICES=(
   nginx
 )
 
-echo "🔄 Stopping and disabling services..."
+echo "🔄 Stopping services..."
 for service in "${SERVICES[@]}"; do
   echo "⛔️ $service"
   sudo systemctl stop "$service"
-  sudo systemctl disable "$service"
 done
 
-echo "✅ All services stopped and disabled."
+echo "✅ All services stopped."

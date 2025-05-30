@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Activates (starts and enables) common web/file services
+# Temporarily starts services for usage
 
 set -euo pipefail
 
@@ -11,11 +11,10 @@ SERVICES=(
   nginx
 )
 
-echo "🔄 Starting and enabling services..."
+echo "🔄 Starting services..."
 for service in "${SERVICES[@]}"; do
   echo "▶️  $service"
   sudo systemctl start "$service"
-  sudo systemctl enable "$service"
 done
 
-echo "✅ All services started and enabled."
+echo "✅ All services started."
