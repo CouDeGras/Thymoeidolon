@@ -179,6 +179,92 @@ systemctl restart smbd nmbd
 systemctl daemon-reload
 systemctl enable --now ttyd.service filebrowser.service
 
+# ─────────────────────────────────────────────────────────────
+#  A) Python backend (server.py) as a systemd service
+# ─────────────────────────────────────────────────────────────
+configure_backend_service() {
+  local SERVICE=/etc/systemd/system/thymoeidolon-backend.service
+  local WORKDIR="$USER_HOME/Thymoeidolon"
+  local PY=$(command -v python3 || true)
+
+  [[ -x $PY ]] || { echo "🔧 Installing python3 …"; apt_install python3; PY=$(command -v python3); }
+
+  # (Re)write the unit every run → idempotent
+  cat > "$SERVICE" <<EOF
+[Unit]
+Description=Thymoeidolon backend (server.py on port 8000)
+After=network.target
+
+[Service]
+User=$USER_NAME
+WorkingDirectory=$WORKDIR
+ExecStart=$PY -u server.py --port 8000
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+  systemctl daemon-reload
+  systemctl enable --now thymoeidolon-backend.service
+  echo "🟢 server.py active on http://127.0.0.1:8000"
+}
+
+# ─────────────────────────────────────────────────────────────
+#  B) NGINX vhost that fronts the backend and static assets
+# ─────────────────────────────────────────────────────────────
+configure_nginx_front() {
+  local REPO_STATIC="$USER_HOME/Thymoeidolon/nginx"   # must contain index.html
+  local VHOST="/etc/nginx/conf.d/thymoeidolon.conf"
+
+  [[ -d $REPO_STATIC ]] || {
+    echo "❌ $REPO_STATIC not found (needs index.html)"; exit 1; }
+
+  # bin the vendor sample vhost (harmless if already gone)
+  rm -f /etc/nginx/conf.d/default.conf
+
+  cat > "$VHOST" <<'EOF'
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+
+    # ---------- static assets ----------
+    root __STATIC_ROOT__;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ @backend;
+    }
+
+    # ---------- Python backend ----------
+    location @backend {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    # tighter security (optional)
+    client_max_body_size 20m;
+    add_header X-Frame-Options DENY;
+}
+EOF
+  # replace placeholder
+  sed -i "s|__STATIC_ROOT__|$REPO_STATIC|" "$VHOST"
+
+  nginx -t && systemctl reload nginx
+  echo "🌐 NGINX now serves:"
+  echo "      • static  → http://<host>/index.html"
+  echo "      • backend → http://<host>/   (via proxy to :8000)"
+}
+
+# ─────────────────────────────────────────────────────────────
+#  C) run both routines
+# ─────────────────────────────────────────────────────────────
+configure_backend_service
+configure_nginx_front
+
 IP_ADDR=$(hostname -I | awk '{print $1}')
 echo
 echo "✅ All set!"

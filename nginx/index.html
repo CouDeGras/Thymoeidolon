@@ -23,7 +23,7 @@
 
     * {
       box-sizing: border-box;
-      font-family: 'CustomFont', 'Ubuntu', 'Effra Trial', 'Open Sans', sans-serif
+      font-family: 'CustomFont','Effra Trial','Ubuntu', 'Open Sans', sans-serif
     }
 
     body {
@@ -401,12 +401,96 @@
       margin: 4px;
       /* Optional: Reset default margins for cleaner layout */
     }
+	  /* --- collapsible disclaimer --- */
+#disclaimer {
+  /* re-use the box styling you already have */
+  margin-top: 0;           /* matches the old layout */
+  padding: 12px;
+}
+
+#disclaimer[open] {
+  /* when expanded, nothing changes – keep full padding */
+}
+
+#disclaimer > summary {
+  cursor: pointer;
+  list-style: none;        /* hide the default ▸ arrow */
+  outline: none;           /* remove focus ring (add your own if you like) */
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+#disclaimer > summary::-webkit-details-marker {
+  display: none;           /* hide default marker in WebKit */
+}
+
+/* simple custom marker (rotate on open) */
+#disclaimer summary::before {
+  content: "▶";
+  transition: transform .25s;
+}
+
+#disclaimer[open] summary::before {
+  transform: rotate(90deg); /* ▼ when open */
+}
+/* ── header layout ───────────────────────────────────────────── */
+.header-bar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;   /* | filler | title | picker | */
+  align-items: center;
+  background: #1c1c1c;
+  color: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 16px;
+  white-space: nowrap;
+}
+
+/* centre the title inside the middle column */
+.header-bar h3 {
+  grid-column: 2;
+  justify-self: center;
+  margin: 0;
+}
+
+/* right-align the language picker */
+.lang-picker {
+  grid-column: 3;
+  justify-self: end;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 12px;
+  background: var(--surface-color);
+  color: var(--text-color);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.lang-picker:hover {
+  background: #2c2c2c;
+}
+/* ── shrink the language <select> inside the header ─────────────── */
+.header-bar .lang-picker {
+  width: auto !important;   /* cancel the global 100 % width        */
+  min-width: 68px;          /* keeps all 2-letter codes visible     */
+  text-align: center;       /* optional – centres “EN”, “ES”, …     */
+}
+
   </style>
 </head>
 
 <body>
   <div class="header-bar">
     <h3>::Thymoeidolon::</h3>
+	    <select id="langPicker" class="lang-picker">
+    <option value="en" >English</option>
+    <option value="es">Español</option>
+    <option value="fr">Français</option>
+	<option value="la" selected>Latina</option>
+    <!-- add/remove as you wish -->
+  </select>
   </div>
   <div id="container">
 
@@ -433,12 +517,6 @@
             viewBox="0 0 24 24">
             <path fill="currentColor"
               d="M9 19.4q-2.025-.8-3.338-2.512T4.076 13H6.1q.225 1.325.975 2.425T9 17.2zm3.5 2.6q-.625 0-1.062-.437T11 20.5v-6q0-.625.438-1.062T12.5 13h2.2q.375 0 .713.175t.537.5l.55.825h4q.625 0 1.063.438T22 16v4.5q0 .625-.437 1.063T20.5 22zm-9-11q-.625 0-1.062-.437T2 9.5v-6q0-.625.438-1.062T3.5 2h2.2q.375 0 .713.175t.537.5l.55.825h4q.625 0 1.063.438T13 5v4.5q0 .625-.437 1.063T11.5 11zM18 12q0-1.625-.8-3.012T15 6.8V4.6q2.275.925 3.638 2.938T20 12zm-5 8h7v-3.5h-4.575l-1-1.5H13zM4 9h7V5.5H6.425l-1-1.5H4zm9 11v-5zM4 9V4z" />
-          </svg>
-          <svg class="tab" data-target="leaflet-console" xmlns="http://www.w3.org/2000/svg" width="48" height="48"
-            viewBox="0 0 16 16">
-            <path fill="currentColor" fill-rule="evenodd"
-              d="M4.256 6.041a3.75 3.75 0 0 1 7.348-.832l.152.528l.55.014a2.25 2.25 0 0 1 1.069 4.198a.75.75 0 1 0 .75 1.299a3.75 3.75 0 0 0-1.25-6.946a5.251 5.251 0 0 0-10.035.974a3.25 3.25 0 0 0-.896 6.2a.75.75 0 1 0 .603-1.373A1.75 1.75 0 0 1 3.25 6.75h.967zM6.22 7.22a.75.75 0 0 1 1.06 0l1.75 1.75l.53.53l-.53.53l-1.75 1.75a.75.75 0 0 1-1.06-1.06L7.44 9.5L6.22 8.28a.75.75 0 0 1 0-1.06M8 13.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75"
-              clip-rule="evenodd" />
           </svg>
         </div>
       </div>
@@ -575,89 +653,66 @@
   </div>
 
   <div id="leaflet-info" class="leaflet">
-
+    <div class="content">
 
     <h2>File Browser</h2>
     <button type="button" class="btn service-btn" id="btn-fb">
       Open File Browser (8080)
     </button>
 
-  </div>
-  <div id="leaflet-console" class="leaflet">
-
-    <div class="content">
       <h2>ttyd</h2>
       <button type="button" class="btn service-btn" id="btn-ttyd">
         Open ttyd (7681)
       </button>
     </div>
   </div>
-  <h2>Disclaimer</h2>
-  <div class="info-box">
-    <h3>Disclaimer for Raspberry Pi Camera Device Prototype Evaluation</h3>
+	  
+<h2>Exclusio Responsabilitatis</h2>
+<details id="disclaimer" class="info-box">
 
-    <p>This Raspberry Pi camera device prototype is provided solely for evaluation and testing purposes and is not
-      intended for redistribution, commercial use, or deployment in operational environments. Please acknowledge the
-      following:</p>
+  <h3>Exclusio Responsabilitatis pro Aestimatione Prototypi Machinae Camerae Raspberry Pi</h3>
 
-    <p><strong>1. Component Certification:</strong><br>
-      Individual components of this prototype may carry certifications (such as CE) provided by their respective
-      manufacturers. However, the complete system, including integration, wiring, housing, and software, has not
-      undergone certification or formal testing as a finalized product.</p>
+  <p>Hic prototypus machinae photographicae Raspberry Pi solum ad aestimationem et probationem praebetur, nec ad redistributionem, usum commercialem aut in ambitus operationales adhibendum. Agnoscas quaeso sequentia:</p>
 
-    <p><strong>2. Regulatory Compliance:</strong><br>
-      This device prototype has not been evaluated or certified under UKCA, RoHS, FCC, or any other regulatory
-      standards. It is supplied "as is" and may not comply with safety, privacy, or environmental regulations applicable
-      to finished products.</p>
+  <p><strong>1. Certificatio Componentium:</strong><br>
+    Singuli huius prototypi componentēs certificationes (e.g., CE) a suis fabricatoribus habere possunt. Nihilominus totum systema—with integratione, connexionibus, custodia et programmatibus—ut productum ultimatum certificatum aut formaliter probatum non est.</p>
 
-    <p><strong>3. Basic Functionality:</strong><br>
-      No assurance is provided regarding the basic operational reliability or functionality of the camera device. The
-      device may fail to operate correctly or consistently, and users should not rely upon it for critical functions or
-      sensitive applications.</p>
+  <p><strong>2. Conformitas Regulativa:</strong><br>
+    Hic prototypus non est aestimatus nec certificatus sub normis UKCA, RoHS, FCC nec ullis aliis regulativis. Praebetur “sicut est” et fortasse non observat regulas de securitate, privacitate aut protectione ambientali applicandas ad producta definitiva.</p>
 
-    <p><strong>4. Privacy and Security:</strong><br>
-      This prototype offers no guarantee or expectation of privacy. Users must assume full responsibility for ensuring
-      data privacy and security. The manufacturer explicitly disclaims liability for any unauthorized access, data
-      breaches, or loss of privacy resulting from use of the prototype.</p>
+  <p><strong>3. Functiones Fundamentales:</strong><br>
+    Nulla fides datur de stabilitate aut operatione fundamentali huius machinae. Machina fortasse incorrecte aut inconsistenter operatur, nec in officiis criticis vel applicationibus sensitis inniti debetis.</p>
 
-    <p><strong>5. Electrical Safety:</strong><br>
-      The electrical safety of this device has not been fully assessed or verified. Users accept complete responsibility
-      for evaluating and mitigating electrical risks associated with its use, including but not limited to electrical
-      shock, short circuits, fire hazards, or equipment damage.</p>
+  <p><strong>4. Privacitas et Securitas:</strong><br>
+    Hoc prototypum nullam praestat expectationem privacitatis. Utentes plenam responsabilitatem accipere debent pro tutela et securitate datarum. Fabricator se eximit ab ulla responsabilitate propter accessus non autorizatos, violationes datarum aut amissionem privacitatis ex usu prototypi.</p>
 
-    <p><strong>6. Network and Connectivity:</strong><br>
-      If this device features network connectivity (e.g., Wi-Fi or Ethernet), it may expose connections or data
-      unintentionally. Users are responsible for securing network access and must operate the device in controlled
-      environments to minimize security risks.</p>
+  <p><strong>5. Securitas Electrica:</strong><br>
+    Securitas electrica huius machinae plene aestimata aut comprobata non est. Utentes plenam responsabilitatem ponere debent pro aestimandis et mitigandis periculis electricis, inter ictum electricum, circuitus breves, pericula ignis vel damna instrumentorum.</p>
 
-    <p><strong>7. Environmental Conditions:</strong><br>
-      This prototype is designed only for controlled indoor environments and has not been tested against extreme
-      temperatures, moisture, humidity, dust, or other environmental hazards. Operation outside these conditions may
-      cause device malfunction or damage.</p>
+  <p><strong>6. Connexio Retis:</strong><br>
+    Si haec machina connexionem retis (e.g., Wi-Fi aut Ethernet) habet, nexus vel data inopinato patefacere potest. Utentes curram securitatis retis praestare et machinam in ambitus moderatos uti debent, ut pericula minuantur.</p>
 
-    <p><strong>8. Intellectual Property:</strong><br>
-      This prototype and associated software and hardware designs constitute proprietary intellectual property. By
-      evaluating this device, users agree not to reverse engineer, replicate, modify, or redistribute the device without
-      express written permission from the manufacturer.</p>
+  <p><strong>7. Conditiones Ambientales:</strong><br>
+    Hic prototypus solum ad ambitus interiores moderatos destinatur nec probatus est contra temperaturas extremas, humorem, umiditatem, pulverem aut alia pericula ambientalia. Usus extra has condiciones potest efficere malfunctionem vel damnum machinae.</p>
 
-    <p><strong>9. Limitation of Support:</strong><br>
-      No ongoing technical support, warranty, maintenance, or updates are provided or implied. While feedback may be
-      requested, the manufacturer is not obligated to resolve any identified issues or defects.</p>
+  <p><strong>8. Proprietas Intellectualis:</strong><br>
+    Hic prototypus necnon consilia programmatum et hardware proprietatem intellectualem constituunt. Per aestimationem huius machinae, utentes se obligant ne reverse-engineering, replicationem, modificationem aut redistributionem sine expresso scripti fabricatoris permissione faciunt.</p>
 
-    <p><strong>10. Liability Waiver:</strong><br>
-      By accepting and using this prototype, you explicitly agree to waive all claims against the manufacturer related
-      to functionality, safety, privacy, compliance, or performance issues. The device is provided "as is," without
-      warranties of any kind, express or implied, including merchantability, fitness for a particular purpose, or
-      non-infringement.</p>
+  <p><strong>9. Limitatio Auxilii Technici:</strong><br>
+    Nullum subsidium technicum continuatum, warrantia, manutentio aut renovationes praebentur aut implicantur. Licet feedback peti possit, fabricator non tenetur quaestiones aut vitia solvendi.</p>
 
-  </div>
+  <p><strong>10. Renuntiatio Responsabilitatis:</strong><br>
+    Per acceptationem et usum huius prototypi, vos omnibus actionibus adversus fabricatorem ob functionem, securitatem, privacitatem, conformitatem aut difficultates in perficiendo renuntiare explicitum est. Machina praebetur “sicut est”, sine ullis warrantiis, expressis vel implicitis, inter mercatilitatem, aptitudinem ad scopum particularem aut non-infractio iurium.</p>
+
+</details>
 
 
   <p class="warning" style="text-align:center;margin-bottom:40px">
-    © 2025 Yisu Fang (Iosue Adephonsus)<br> <br>
-    Applied Thaumaturgic and Liturgic Systems<br>Project Thymoeidolon <br><br>
-    Designed in the United Kingdom<br>
-    Prototype Evaluation Use Only<br>
+© MMXXV Iosue Adephonsus<br><br>
+Systemata thaumaturgica et liturgica applicata<br>
+Projectum Thymoeidolon<br><br>
+In Regno Unito designatum<br>
+Ad aestimationem prototypi solum<br>
   </p>
 
   <script>
