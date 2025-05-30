@@ -179,6 +179,7 @@ systemctl restart smbd nmbd
 systemctl daemon-reload
 systemctl enable --now ttyd.service filebrowser.service
 
+IP_ADDR=$(hostname -I | awk '{print $1}')
 # ─────────────────────────────────────────────────────────────
 #  A) Python backend (server.py) as a systemd service
 # ─────────────────────────────────────────────────────────────
@@ -254,9 +255,7 @@ EOF
   sed -i "s|__STATIC_ROOT__|$REPO_STATIC|" "$VHOST"
 
   nginx -t && systemctl reload nginx
-  echo "🌐 NGINX now serves:"
-  echo "      • static  → http://<host>/index.html"
-  echo "      • backend → http://<host>/   (via proxy to :8000)"
+
 }
 
 # ─────────────────────────────────────────────────────────────
@@ -265,7 +264,9 @@ EOF
 configure_backend_service
 configure_nginx_front
 
-IP_ADDR=$(hostname -I | awk '{print $1}')
+echo "🌐 NGINX now serves:"
+echo "      • static  → http://$IP_ADDR/index.html"
+echo "      • backend → http://$IP_ADDR/   (via proxy to :8000)"
 echo
 echo "✅ All set!"
 echo "   – ttyd        → http://$IP_ADDR:7681"
