@@ -5,9 +5,38 @@ set -euo pipefail
 # 0) must run as root
 # ─────────────────────────────────────────────────────────────
 if [[ $EUID -ne 0 ]]; then
-  echo "⚠️  Please run this script as root (e.g. with sudo)."
+  echo "⚠️  please sudo."
   exit 1
 fi
+# ─────────────────────────────────────────────────────────────
+# 1) must be Ubuntu
+# ─────────────────────────────────────────────────────────────
+if ! grep -q "Ubuntu" /etc/os-release; then
+  echo "⚠️  ubuntu only script (requires snap) "
+  exit 1
+fi
+
+# Define base path
+BASE_DIR="$HOME/DCIM"
+
+# Define subdirectories
+DIRS=(
+  "$BASE_DIR/original"
+  "$BASE_DIR/processed"
+  "$BASE_DIR/meta"
+)
+
+# Create each directory if it doesn't exist
+for dir in "${DIRS[@]}"; do
+  if [[ ! -d "$dir" ]]; then
+    mkdir -p "$dir"
+    echo "✅ Created: $dir"
+  else
+    echo "⚠️  Already exists: $dir"
+  fi
+done
+
+echo "📁 DCIM folder structure set up successfully."
 
 # ─────────────────────────────────────────────────────────────
 # 1) helper utilities
