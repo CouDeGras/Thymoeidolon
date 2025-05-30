@@ -1,139 +1,104 @@
 #!/usr/bin/env bash
-set -euo pipefail
+#
+# Fully-idempotent media-server bootstrapper
+#   – ttyd (snap)
+#   – File Browser
+#   – NGINX from official repo
+#   – Samba shares for $HOME and DCIM
+#
+# Run as root on Ubuntu.
 
-# ─────────────────────────────────────────────────────────────
-# 0) must run as root
-# ─────────────────────────────────────────────────────────────
-if [[ $EUID -ne 0 ]]; then
-  echo "⚠️  please sudo."
-  exit 1
-fi
-# ─────────────────────────────────────────────────────────────
-# 1) must be Ubuntu
-# ─────────────────────────────────────────────────────────────
-if ! grep -q "Ubuntu" /etc/os-release; then
-  echo "⚠️  ubuntu only script (requires snap) "
-  exit 1
-fi
+set -Eeuo pipefail
+trap 'echo "❌ Error on line $LINENO – exiting."; exit 1' ERR
 
+# ───────────────────────────────────
+# 0) pre-flight checks
+# ───────────────────────────────────
+[[ $EUID -eq 0 ]] || { echo "⚠️  please run with sudo."; exit 1; }
+grep -q "Ubuntu" /etc/os-release ||
+  { echo "⚠️  Ubuntu-only script (needs snap)"; exit 1; }
 
-# Determine the actual user's home directory even when run with sudo
-if [[ "$EUID" -eq 0 && -n "${SUDO_USER:-}" ]]; then
-  USER_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
-else
-  USER_HOME="$HOME"
-fi
+# Ensure /snap/bin is discoverable for command -v
+export PATH="$PATH:/snap/bin"
 
-# Define base path
+# ───────────────────────────────────
+# 1) resolve real non-root user + paths
+# ───────────────────────────────────
+USER_NAME=${SUDO_USER:-$USER}
+USER_HOME=$(getent passwd "$USER_NAME" | cut -d: -f6)
 BASE_DIR="$USER_HOME/DCIM"
 
-# Define subdirectories
-DIRS=(
-  "$BASE_DIR/original"
-  "$BASE_DIR/processed"
-  "$BASE_DIR/meta"
-)
-
-# Create each directory if it doesn't exist
-for dir in "${DIRS[@]}"; do
-  if [[ ! -d "$dir" ]]; then
+# create DCIM structure (idempotent)
+for sub in original processed meta; do
+  dir="$BASE_DIR/$sub"
+  [[ -d $dir ]] && echo "⚠️  Already exists: $dir" || {
     mkdir -p "$dir"
     echo "✅ Created: $dir"
-  else
-    echo "⚠️  Already exists: $dir"
-  fi
+  }
 done
+echo "📁 DCIM folder ready at $BASE_DIR"
 
-echo "📁 DCIM folder structure set up successfully under: $BASE_DIR"
+# ───────────────────────────────────
+# 2) helper wrappers
+# ───────────────────────────────────
+need_cmd()  { command -v "$1" &>/dev/null; }
+need_snap() { snap list "$1" &>/dev/null; }
+apt_install(){ DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "$@"; }
 
-# ─────────────────────────────────────────────────────────────
-# 1) helper utilities
-# ─────────────────────────────────────────────────────────────
-need_cmd()   { command -v "$1" &>/dev/null; }   # returns 0 if cmd exists
-apt_install() {
-  DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "$@"
-}
-
-# ─────────────────────────────────────────────────────────────
-# 2) dependency installers
-# ─────────────────────────────────────────────────────────────
+# ───────────────────────────────────
+# 3) installers (all idempotent)
+# ───────────────────────────────────
 install_snapd() {
-  echo "🔧 Installing snapd …"
+  echo "🔧 Installing snapd…"
   apt_install snapd
 }
 
 install_ttyd() {
-  echo "🔧 Installing ttyd via snap …"
-  snap install ttyd --classic
+  echo "🔧 Ensuring ttyd snap…"
+  need_snap ttyd || snap install ttyd --classic || [[ $? -eq 10 ]]
 }
 
 install_filebrowser() {
-  echo "🔧 Installing File Browser …"
-  curl -fsSL https://raw.githubusercontent.com/filebrowser/get/master/get.sh | bash
+  echo "🔧 Ensuring File Browser…"
+  need_cmd filebrowser || curl -fsSL https://raw.githubusercontent.com/filebrowser/get/master/get.sh | bash
 }
 
 install_cli_prereqs() {
-  echo "🔧 Installing CLI prerequisites (curl, gnupg2, …) …"
+  echo "🔧 Installing CLI prereqs…"
   apt_install curl gnupg2 ca-certificates lsb-release ubuntu-keyring
 }
 
 install_nginx() {
-  echo "🔧 Installing NGINX from official repo …"
-  curl -fsSL https://nginx.org/keys/nginx_signing.key \
-    | gpg --dearmor \
-    | tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null
+  echo "🔧 Ensuring NGINX repo + pkg…"
+  local keyring=/usr/share/keyrings/nginx-archive-keyring.gpg
+  [[ -f $keyring ]] || curl -fsSL https://nginx.org/keys/nginx_signing.key | gpg --dearmor > "$keyring"
 
-  echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] \
-http://nginx.org/packages/ubuntu $(lsb_release -cs) nginx" \
-    | tee /etc/apt/sources.list.d/nginx.list >/dev/null
+  local list=/etc/apt/sources.list.d/nginx.list
+  grep -q "^deb .*nginx.org" "$list" 2>/dev/null || \
+    echo "deb [signed-by=$keyring] http://nginx.org/packages/ubuntu $(lsb_release -cs) nginx" > "$list"
 
-  apt-get update
-  apt_install nginx
+  apt-get update -qq
+  need_cmd nginx || apt_install nginx
 }
 
-# ─────────────────────────────────────────────────────────────
-# 3) detect & install missing dependencies
-# ─────────────────────────────────────────────────────────────
-echo "🔍 Checking dependencies …"
+# ───────────────────────────────────
+# 4) dependency resolution
+# ───────────────────────────────────
+echo "🔍 Checking dependencies…"
 apt-get update -qq
 
-# snapd first (needed for ttyd)
-if ! need_cmd snap; then
-  install_snapd
-fi
-
-# basic CLI tools (curl et al.)
-if ! need_cmd curl || ! need_cmd gpg; then
-  install_cli_prereqs
-fi
-
-# ttyd
-if ! need_cmd ttyd; then
-  install_ttyd
-fi
-
-# File Browser
-if ! need_cmd filebrowser; then
-  install_filebrowser
-fi
-
-# nginx
-if ! need_cmd nginx; then
-  install_nginx
-fi
-
-# ─────────────────────────────────────────────────────────────
-# 4) resolve the real, non-root user
-# ─────────────────────────────────────────────────────────────
-USER_NAME=${SUDO_USER:-${USER}}
-HOME_DIR=$(getent passwd "$USER_NAME" | cut -d: -f6)
+need_cmd snap      || install_snapd
+need_cmd curl || need_cmd gpg || install_cli_prereqs
+need_snap ttyd     || install_ttyd
+need_cmd filebrowser || install_filebrowser
+need_cmd nginx     || install_nginx
 
 TTYD_BIN=$(command -v ttyd)
 FB_BIN=$(command -v filebrowser)
 
-# ─────────────────────────────────────────────────────────────
-# 5) systemd unit: ttyd
-# ─────────────────────────────────────────────────────────────
+# ───────────────────────────────────
+# 5) systemd units (overwrite-safe)
+# ───────────────────────────────────
 cat > /etc/systemd/system/ttyd.service <<EOF
 [Unit]
 Description=ttyd – Terminal over Web (port 7681)
@@ -148,70 +113,47 @@ Restart=on-failure
 WantedBy=multi-user.target
 EOF
 
-# ─────────────────────────────────────────────────────────────
-# 6) systemd unit: File Browser
-# ─────────────────────────────────────────────────────────────
-
 cat > /etc/systemd/system/filebrowser.service <<EOF
 [Unit]
-Description=File Browser (serving $HOME_DIR on port 8080)
+Description=File Browser (serving $USER_HOME on port 8080)
 After=network.target
 
 [Service]
 User=$USER_NAME
-WorkingDirectory=$HOME_DIR
+WorkingDirectory=$USER_HOME
 ExecStart=$FB_BIN \\
-  -r $HOME_DIR \\
+  -r $USER_HOME \\
   --address 0.0.0.0 \\
   --port 8080 \\
-  --database $HOME_DIR/.config/filebrowser.db
+  --database $USER_HOME/.config/filebrowser.db
 Restart=on-failure
 RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
 EOF
-# ─────────────────────────────────────────────────────────────
-# 7) enable & start services
-# ─────────────────────────────────────────────────────────────
 
-# ───────────────────────────────────────────────
-# Auto-detect current user
-USER_NAME="${SUDO_USER:-$USER}"
-HOME_DIR="/home/$USER_NAME"
-SMB_CONF="/etc/samba/smb.conf"
+# ───────────────────────────────────
+# 6) Samba share setup
+# ───────────────────────────────────
+SMB_CONF=/etc/samba/smb.conf
+echo "🔧 Ensuring Samba…"
+need_cmd smbd || apt_install samba
 
-# ───────────────────────────────────────────────
-echo "🔧 Installing Samba if not already present..."
-sudo apt update
-sudo apt install -y samba
+echo "📂 Setting guest-read permissions on $USER_HOME…"
+chmod o+rx "$USER_HOME"
 
-# ───────────────────────────────────────────────
-echo "📂 Setting permissions for guest access to $HOME_DIR..."
-sudo chmod o+rx "$HOME_DIR"
+# one-time smb.conf backup
+[[ -f ${SMB_CONF}.orig ]] || cp "$SMB_CONF" "${SMB_CONF}.orig"
 
-# ───────────────────────────────────────────────
-echo "🧠 Backing up current smb.conf..."
-sudo cp "$SMB_CONF" "${SMB_CONF}.backup.$(date +%Y%m%d%H%M%S)"
-
-# ───────────────────────────────────────────────
-echo "🧽 Cleaning up old DCIM and Thymoeidolon share entries..."
-
-# Use awk to remove existing blocks
-TEMP_CONF=$(mktemp)
+echo "🧹 Refreshing DCIM & Thymoeidolon blocks…"
 awk '
-  BEGIN { skip = 0 }
-  /^\[DCIM\]/        { skip = 1; next }
-  /^\[Thymoeidolon\]/ { skip = 1; next }
-  /^\[.*\]/         { skip = 0 }
-  !skip { print }
-' "$SMB_CONF" > "$TEMP_CONF"
-
-# Replace smb.conf with cleaned version
-mv "$TEMP_CONF" "$SMB_CONF"
-
-# ───────────────────────────────────────────────
-echo "📝 Writing fresh Samba share definitions…"
+  BEGIN {skip=0}
+  /^\[(DCIM|Thymoeidolon)\]/{skip=1;next}
+  /^\[.*\]/{skip=0}
+  !skip
+' "$SMB_CONF" > "${SMB_CONF}.tmp"
+mv "${SMB_CONF}.tmp" "$SMB_CONF"
 
 cat >> "$SMB_CONF" <<EOF
 
@@ -223,27 +165,23 @@ cat >> "$SMB_CONF" <<EOF
    force user = $USER_NAME
 
 [Thymoeidolon]
-   path = $HOME_DIR
+   path = $USER_HOME
    browsable = yes
    read only = no
    guest ok = yes
    force user = $USER_NAME
 EOF
-
-# ───────────────────────────────────────────────
-echo "🔄 Restarting Samba services..."
 systemctl restart smbd nmbd
 
-
-
+# ───────────────────────────────────
+# 7) enable + start services
+# ───────────────────────────────────
 systemctl daemon-reload
 systemctl enable --now ttyd.service filebrowser.service
+
 IP_ADDR=$(hostname -I | awk '{print $1}')
 echo
 echo "✅ All set!"
-echo "   – ttyd      → http://$IP_ADDR:7681"
-echo "   – filebrowser → http://$IP_ADDR:8080 (serves $HOME_DIR)"
-# ───────────────────────────────────────────────
-
-echo "✅ Samba share is live!"
-echo $IP_ADDR
+echo "   – ttyd        → http://$IP_ADDR:7681"
+echo "   – File Browser → http://$IP_ADDR:8080  (serves $USER_HOME)"
+echo "   – Samba shares live on $IP_ADDR"
