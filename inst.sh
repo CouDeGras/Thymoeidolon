@@ -179,7 +179,6 @@ EOF
 # Auto-detect current user
 USER_NAME="${SUDO_USER:-$USER}"
 HOME_DIR="/home/$USER_NAME"
-SHARE_NAME="Thymoeidolon"
 SMB_CONF="/etc/samba/smb.conf"
 
 # ───────────────────────────────────────────────
@@ -200,7 +199,14 @@ echo "📝 Adding Samba share definition for $USER_NAME..."
 
 sudo tee -a "$SMB_CONF" > /dev/null <<EOF
 
-[$SHARE_NAME]
+[DCIM]
+   path = $BASE_DIR
+   browsable = yes
+   read only = no
+   guest ok = yes
+   force user = $USER_NAME
+
+[Thymoeidolon]
    path = $HOME_DIR
    browsable = yes
    read only = no
@@ -224,9 +230,4 @@ echo "✅ All set!"
 echo "   – ttyd      → http://<host>:7681"
 echo "   – filebrowser → http://<host>:8080 (serves $HOME_DIR)"
 echo
-systemctl status ttyd
-systemctl status filebrowser
-systemctl status nginx
-systemctl status smbd
-systemctl status nmbd
 echo
