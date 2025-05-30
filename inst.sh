@@ -195,9 +195,25 @@ echo "🧠 Backing up current smb.conf..."
 sudo cp "$SMB_CONF" "${SMB_CONF}.backup.$(date +%Y%m%d%H%M%S)"
 
 # ───────────────────────────────────────────────
-echo "📝 Adding Samba share definition for $USER_NAME..."
+echo "🧽 Cleaning up old DCIM and Thymoeidolon share entries..."
 
-sudo tee -a "$SMB_CONF" > /dev/null <<EOF
+# Use awk to remove existing blocks
+TEMP_CONF=$(mktemp)
+awk '
+  BEGIN { skip = 0 }
+  /^\[DCIM\]/        { skip = 1; next }
+  /^\[Thymoeidolon\]/ { skip = 1; next }
+  /^\[.*\]/         { skip = 0 }
+  !skip { print }
+' "$SMB_CONF" > "$TEMP_CONF"
+
+# Replace smb.conf with cleaned version
+mv "$TEMP_CONF" "$SMB_CONF"
+
+# ───────────────────────────────────────────────
+echo "📝 Writing fresh Samba share definitions…"
+
+cat >> "$SMB_CONF" <<EOF
 
 [DCIM]
    path = $BASE_DIR
@@ -216,11 +232,9 @@ EOF
 
 # ───────────────────────────────────────────────
 echo "🔄 Restarting Samba services..."
-sudo systemctl restart smbd nmbd
+systemctl restart smbd nmbd
 
-# ───────────────────────────────────────────────
-IP_ADDR=$(hostname -I | awk '{print $1}')
-echo "✅ Samba share is live!"
+
 
 systemctl daemon-reload
 systemctl enable --now ttyd.service filebrowser.service
@@ -229,5 +243,7 @@ echo
 echo "✅ All set!"
 echo "   – ttyd      → http://<host>:7681"
 echo "   – filebrowser → http://<host>:8080 (serves $HOME_DIR)"
-echo
+# ───────────────────────────────────────────────
+IP_ADDR=$(hostname -I | awk '{print $1}')
+echo "✅ Samba share is live!"
 echo
