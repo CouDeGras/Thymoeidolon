@@ -220,7 +220,7 @@ sudo systemctl restart smbd nmbd
 
 # ───────────────────────────────────────────────
 IP_ADDR=$(hostname -I | awk '{print $1}')
-echo "✅ Samba share '$SHARE_NAME' is live!"
+echo "✅ Samba share is live!"
 
 systemctl daemon-reload
 systemctl enable --now ttyd.service filebrowser.service
