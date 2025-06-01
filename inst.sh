@@ -8,8 +8,8 @@
 #
 # Run as root on Ubuntu **or Linux Mint**.
 
-set -Eeuo pipefail
-trap 'echo "❌ Error on line $LINENO – exiting."; exit 1' ERR
+#set -Eeuo pipefail
+#trap 'echo "❌ Error on line $LINENO – exiting."; exit 1' ERR
 set +e
 # ───────────────────────────────────
 # 0) pre-flight checks
