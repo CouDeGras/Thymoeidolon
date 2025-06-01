@@ -16,7 +16,7 @@ trap 'echo "❌ Error on line $LINENO – exiting."; exit 1' ERR
 # ───────────────────────────────────
 [[ $EUID -eq 0 ]] || { echo "⚠️  please run with sudo."; exit 1; }
 grep -q "Ubuntu" /etc/os-release ||
-  { echo "⚠️  Ubuntu-only script (needs snap)"; exit 1; }
+  { echo "⚠️  Ubuntu-only script (needs snap)"; }
 
 # Ensure /snap/bin is discoverable for command -v
 export PATH="$PATH:/snap/bin"
