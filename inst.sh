@@ -6,7 +6,11 @@
 #   – NGINX from official repo
 #   – Samba shares for $HOME and DCIM
 #
-# Run as root on Ubuntu.
+# Tested on:
+#   • Ubuntu 20.04/22.04/24.04
+#   • Linux Mint 20 (Ubuntu focal), 21 (jammy), 22 (noble)
+#
+# Run as root.
 
 set -Eeuo pipefail
 trap 'echo "❌ Error on line $LINENO – exiting."; exit 1' ERR
@@ -15,8 +19,13 @@ trap 'echo "❌ Error on line $LINENO – exiting."; exit 1' ERR
 # 0) pre-flight checks
 # ───────────────────────────────────
 [[ $EUID -eq 0 ]] || { echo "⚠️  please run with sudo."; exit 1; }
-grep -q "Ubuntu" /etc/os-release ||
-  { echo "⚠️  Ubuntu-only script (needs snap)"; }
+
+# shellcheck disable=SC1091
+source /etc/os-release          # gives us $ID, $ID_LIKE, $UBUNTU_CODENAME …
+
+if [[ "$ID" != ubuntu && "$ID" != linuxmint && "$ID_LIKE" != *ubuntu* ]]; then
+  echo "⚠️  This script supports Ubuntu or Linux Mint only."; exit 1;
+fi
 
 # Ensure /snap/bin is discoverable for command -v
 export PATH="$PATH:/snap/bin"
@@ -41,9 +50,15 @@ echo "📁 DCIM folder ready at $BASE_DIR"
 # ───────────────────────────────────
 # 2) helper wrappers
 # ───────────────────────────────────
-need_cmd()  { command -v "$1" &>/dev/null; }
-need_snap() { snap list "$1" &>/dev/null; }
+need_cmd()   { command -v "$1" &>/dev/null; }
+need_snap()  { snap list "$1" &>/dev/null; }
 apt_install(){ DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "$@"; }
+
+# Small utility: returns the Ubuntu codename even on Mint
+ubuntu_codename() {
+  # Prefer UBUNTU_CODENAME (present on Mint) else fall back to lsb_release
+  echo "${UBUNTU_CODENAME:-$(lsb_release -cs)}"
+}
 
 # ───────────────────────────────────
 # 3) installers (all idempotent)
@@ -71,13 +86,25 @@ install_cli_prereqs() {
 install_nginx() {
   echo "🔧 Ensuring NGINX repo + pkg…"
   local keyring=/usr/share/keyrings/nginx-archive-keyring.gpg
-  [[ -f $keyring ]] || curl -fsSL https://nginx.org/keys/nginx_signing.key | gpg --dearmor > "$keyring"
+  [[ -f $keyring ]] || curl -fsSL https://nginx.org/keys/nginx_signing.key | gpg --dearmor -o "$keyring"
 
   local list=/etc/apt/sources.list.d/nginx.list
-  grep -q "^deb .*nginx.org" "$list" 2>/dev/null || \
-    echo "deb [signed-by=$keyring] http://nginx.org/packages/ubuntu $(lsb_release -cs) nginx" > "$list"
+  local codename
+  codename="$(ubuntu_codename)"
 
-  apt-get update -qq
+  # (Re)create the repo file if missing or if the codename changed
+  if ! grep -qE "^deb .*$codename .*nginx" "$list" 2>/dev/null; then
+    echo "deb [signed-by=$keyring] http://nginx.org/packages/ubuntu $codename nginx" > "$list"
+  fi
+
+  # First try with the detected codename
+  if ! apt-get update -qq; then
+    echo "⚠️  NGINX repo for “$codename” not found – falling back to its Ubuntu base codename."
+    # On Mint, $codename is already the Ubuntu base (e.g. jammy), so as a last resort use jammy
+    sed -i "s|ubuntu [^ ]* nginx|ubuntu jammy nginx|" "$list"
+    apt-get update -qq
+  fi
+
   need_cmd nginx || apt_install nginx
 }
 
@@ -87,11 +114,11 @@ install_nginx() {
 echo "🔍 Checking dependencies…"
 apt-get update -qq
 
-need_cmd snap      || install_snapd
+need_cmd snap          || install_snapd
 need_cmd curl || need_cmd gpg || install_cli_prereqs
-need_snap ttyd     || install_ttyd
-need_cmd filebrowser || install_filebrowser
-need_cmd nginx     || install_nginx
+need_snap ttyd         || install_ttyd
+need_cmd filebrowser   || install_filebrowser
+need_cmd nginx         || install_nginx
 
 TTYD_BIN=$(command -v ttyd)
 FB_BIN=$(command -v filebrowser)
@@ -180,6 +207,7 @@ systemctl daemon-reload
 systemctl enable --now ttyd.service filebrowser.service
 
 IP_ADDR=$(hostname -I | awk '{print $1}')
+
 # ─────────────────────────────────────────────────────────────
 #  A) Python backend (server.py) as a systemd service
 # ─────────────────────────────────────────────────────────────
@@ -255,7 +283,6 @@ EOF
   sed -i "s|__STATIC_ROOT__|$REPO_STATIC|" "$VHOST"
 
   nginx -t && systemctl reload nginx
-
 }
 
 # ─────────────────────────────────────────────────────────────
@@ -269,6 +296,6 @@ echo "      • static  → http://$IP_ADDR/index.html"
 echo "      • backend → http://$IP_ADDR/   (via proxy to :8000)"
 echo
 echo "✅ All set!"
-echo "   – ttyd        → http://$IP_ADDR:7681"
+echo "   – ttyd         → http://$IP_ADDR:7681"
 echo "   – File Browser → http://$IP_ADDR:8080  (serves $USER_HOME)"
 echo "   – Samba shares live on $IP_ADDR"
