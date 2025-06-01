@@ -6,11 +6,7 @@
 #   – NGINX from official repo
 #   – Samba shares for $HOME and DCIM
 #
-# Tested on:
-#   • Ubuntu 20.04/22.04/24.04
-#   • Linux Mint 20 (Ubuntu focal), 21 (jammy), 22 (noble)
-#
-# Run as root.
+# Run as root on Ubuntu **or Linux Mint**.
 
 set -Eeuo pipefail
 trap 'echo "❌ Error on line $LINENO – exiting."; exit 1' ERR
@@ -21,11 +17,15 @@ trap 'echo "❌ Error on line $LINENO – exiting."; exit 1' ERR
 [[ $EUID -eq 0 ]] || { echo "⚠️  please run with sudo."; exit 1; }
 
 # shellcheck disable=SC1091
-source /etc/os-release          # gives us $ID, $ID_LIKE, $UBUNTU_CODENAME …
+. /etc/os-release
+case $ID in
+  ubuntu|linuxmint) : ;;
+  *) echo "⚠️  Supported on Ubuntu or Linux Mint only."; exit 1 ;;
+esac
 
-if [[ "$ID" != ubuntu && "$ID" != linuxmint && "$ID_LIKE" != *ubuntu* ]]; then
-  echo "⚠️  This script supports Ubuntu or Linux Mint only."; exit 1;
-fi
+# Underlying Ubuntu codename (works for Mint too)
+CODENAME=${UBUNTU_CODENAME:-$VERSION_CODENAME}
+[[ -z $CODENAME ]] && CODENAME=$(lsb_release -cs)
 
 # Ensure /snap/bin is discoverable for command -v
 export PATH="$PATH:/snap/bin"
@@ -50,21 +50,21 @@ echo "📁 DCIM folder ready at $BASE_DIR"
 # ───────────────────────────────────
 # 2) helper wrappers
 # ───────────────────────────────────
-need_cmd()   { command -v "$1" &>/dev/null; }
-need_snap()  { snap list "$1" &>/dev/null; }
+need_cmd()  { command -v "$1" &>/dev/null; }
+need_snap() { snap list "$1" &>/dev/null; }
 apt_install(){ DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends "$@"; }
-
-# Small utility: returns the Ubuntu codename even on Mint
-ubuntu_codename() {
-  # Prefer UBUNTU_CODENAME (present on Mint) else fall back to lsb_release
-  echo "${UBUNTU_CODENAME:-$(lsb_release -cs)}"
-}
 
 # ───────────────────────────────────
 # 3) installers (all idempotent)
 # ───────────────────────────────────
 install_snapd() {
   echo "🔧 Installing snapd…"
+  # Linux Mint blocks snap via nosnap.pref – rename it if present
+  local nosnap=/etc/apt/preferences.d/nosnap.pref
+  if [[ -f $nosnap ]]; then
+    echo "👉 Unblocking snap (renaming $nosnap)"
+    mv "$nosnap" "${nosnap}.bak"
+  fi
   apt_install snapd
 }
 
@@ -89,22 +89,10 @@ install_nginx() {
   [[ -f $keyring ]] || curl -fsSL https://nginx.org/keys/nginx_signing.key | gpg --dearmor -o "$keyring"
 
   local list=/etc/apt/sources.list.d/nginx.list
-  local codename
-  codename="$(ubuntu_codename)"
+  grep -q "^deb .*nginx.org" "$list" 2>/dev/null || \
+    echo "deb [signed-by=$keyring] http://nginx.org/packages/ubuntu $CODENAME nginx" > "$list"
 
-  # (Re)create the repo file if missing or if the codename changed
-  if ! grep -qE "^deb .*$codename .*nginx" "$list" 2>/dev/null; then
-    echo "deb [signed-by=$keyring] http://nginx.org/packages/ubuntu $codename nginx" > "$list"
-  fi
-
-  # First try with the detected codename
-  if ! apt-get update -qq; then
-    echo "⚠️  NGINX repo for “$codename” not found – falling back to its Ubuntu base codename."
-    # On Mint, $codename is already the Ubuntu base (e.g. jammy), so as a last resort use jammy
-    sed -i "s|ubuntu [^ ]* nginx|ubuntu jammy nginx|" "$list"
-    apt-get update -qq
-  fi
-
+  apt-get update -qq
   need_cmd nginx || apt_install nginx
 }
 
@@ -114,11 +102,11 @@ install_nginx() {
 echo "🔍 Checking dependencies…"
 apt-get update -qq
 
-need_cmd snap          || install_snapd
+need_cmd snap        || install_snapd
 need_cmd curl || need_cmd gpg || install_cli_prereqs
-need_snap ttyd         || install_ttyd
-need_cmd filebrowser   || install_filebrowser
-need_cmd nginx         || install_nginx
+need_snap ttyd       || install_ttyd
+need_cmd filebrowser || install_filebrowser
+need_cmd nginx       || install_nginx
 
 TTYD_BIN=$(command -v ttyd)
 FB_BIN=$(command -v filebrowser)
@@ -218,7 +206,6 @@ configure_backend_service() {
 
   [[ -x $PY ]] || { echo "🔧 Installing python3 …"; apt_install python3; PY=$(command -v python3); }
 
-  # (Re)write the unit every run → idempotent
   cat > "$SERVICE" <<EOF
 [Unit]
 Description=Thymoeidolon backend (server.py on port 8000)
@@ -250,8 +237,7 @@ configure_nginx_front() {
   [[ -d $REPO_STATIC ]] || {
     echo "❌ $REPO_STATIC not found (needs index.html)"; exit 1; }
 
-  # bin the vendor sample vhost (harmless if already gone)
-  rm -f /etc/nginx/conf.d/default.conf
+  rm -f /etc/nginx/conf.d/default.conf  # vendor sample vhost
 
   cat > "$VHOST" <<'EOF'
 server {
@@ -274,20 +260,15 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     }
 
-    # tighter security (optional)
     client_max_body_size 20m;
     add_header X-Frame-Options DENY;
 }
 EOF
-  # replace placeholder
   sed -i "s|__STATIC_ROOT__|$REPO_STATIC|" "$VHOST"
 
   nginx -t && systemctl reload nginx
 }
 
-# ─────────────────────────────────────────────────────────────
-#  C) run both routines
-# ─────────────────────────────────────────────────────────────
 configure_backend_service
 configure_nginx_front
 
