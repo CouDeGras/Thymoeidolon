@@ -84,17 +84,13 @@ install_cli_prereqs() {
 }
 
 install_nginx() {
-  echo "🔧 Ensuring NGINX repo + pkg…"
-  local keyring=/usr/share/keyrings/nginx-archive-keyring.gpg
-  [[ -f $keyring ]] || curl -fsSL https://nginx.org/keys/nginx_signing.key | gpg --dearmor -o "$keyring"
-
-  local list=/etc/apt/sources.list.d/nginx.list
-  grep -q "^deb .*nginx.org" "$list" 2>/dev/null || \
-    echo "deb [signed-by=$keyring] http://nginx.org/packages/ubuntu $CODENAME nginx" > "$list"
-
+  echo "🔧 Ensuring NGINX (distro package)…"
+  # Refresh package index once per run
   apt-get update -qq
+  # Install only if the binary is missing
   need_cmd nginx || apt_install nginx
 }
+
 
 # ───────────────────────────────────
 # 4) dependency resolution
