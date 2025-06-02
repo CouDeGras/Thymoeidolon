@@ -20,7 +20,7 @@ trap 'echo "❌ Error on line $LINENO – exiting.";' ERR
 . /etc/os-release
 case $ID in
   ubuntu|linuxmint) : ;;
-  *) echo "⚠️  Supported on Ubuntu or Linux Mint only."; exit 1 ;;
+  *) echo "⚠️  Supported on Ubuntu only."; exit 1 ;;
 esac
 
 # Underlying Ubuntu codename (works for Mint too)
