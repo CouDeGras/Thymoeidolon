@@ -163,5 +163,5 @@ EOS
 # ─────────────────────────────────────────────────────────────
 rfkill unblock wifi           # persist unblocked state
 echo "✅ Installation/upgrade complete."
-echo "→ Reboot or run:  sudo $bootstrap"
+echo "→ Run:  sudo $bootstrap"
 echo "→ Then connect and visit:  http://192.168.4.1:7681"
