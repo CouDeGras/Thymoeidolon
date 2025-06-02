@@ -8,9 +8,9 @@
 #
 # Run as root on Ubuntu **or Linux Mint**.
 
-#set -Eeuo pipefail
-#trap 'echo "❌ Error on line $LINENO – exiting."; exit 1' ERR
-set +e
+set -Eeuo pipefail
+trap 'echo "❌ Error on line $LINENO – exiting.";' ERR
+
 # ───────────────────────────────────
 # 0) pre-flight checks
 # ───────────────────────────────────
@@ -167,6 +167,13 @@ awk '
 mv "${SMB_CONF}.tmp" "$SMB_CONF"
 
 cat >> "$SMB_CONF" <<EOF
+[global]
+   security = user
+   map to guest = Bad User
+   guest account = nobody
+
+   # ← allow blank (null) passwords so Samba will never prompt
+   null passwords = yes
 
 [DCIM]
    path = $BASE_DIR
@@ -174,6 +181,10 @@ cat >> "$SMB_CONF" <<EOF
    read only = no
    guest ok = yes
    force user = $USER_NAME
+   guest only = yes
+   create mask = 0777
+   directory mask = 0777
+   force group = nogroup
 
 [Thymoeidolon]
    path = $USER_HOME
@@ -181,6 +192,10 @@ cat >> "$SMB_CONF" <<EOF
    read only = no
    guest ok = yes
    force user = $USER_NAME
+   guest only = yes
+   create mask = 0777
+   directory mask = 0777
+   force group = nogroup
 EOF
 systemctl restart smbd nmbd
 
