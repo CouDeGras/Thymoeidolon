@@ -13,6 +13,9 @@ die() { echo "❌ $*"; exit 1; }
 need_root() { [[ $EUID -eq 0 ]] || die "Please run with sudo"; }
 need_root
 
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
 # ─────────────────────────────────────────────────────────────
 # helpers
 # ─────────────────────────────────────────────────────────────
@@ -138,36 +141,22 @@ EOF
 enable_service ttyd.service
 
 # ─────────────────────────────────────────────────────────────
-# 6) AP bootstrap one-shot (ensures order on boot)
+# 6) Write the manual AP-start helper (no boot unit)
 # ─────────────────────────────────────────────────────────────
-bootstrap=/usr/local/sbin/ap_start.sh
+bootstrap="$SCRIPT_DIR/ap_on.sh"
 write_if_changed "$bootstrap" 755 <<'EOS'
 #!/usr/bin/env bash
 set -e
 ip addr flush dev wlan0 || true
-ip link set wlan0 down   || true
+ip link set wlan0 down || true
 systemctl restart hostapd
-sleep 4                          # wait for AP-ENABLED
+sleep 4
 ip addr add 192.168.4.1/24 dev wlan0 || true
 systemctl restart dnsmasq
 systemctl restart ttyd.service
-systemctl restart smbd nmbd   || true
+systemctl restart smbd nmbd || true
 EOS
 
-write_if_changed /etc/systemd/system/ap-bootstrap.service 644 <<EOF
-[Unit]
-Description=Bring up stand-alone Wi-Fi AP
-After=network-pre.target
-
-[Service]
-Type=oneshot
-ExecStart=$bootstrap
-RemainAfterExit=yes
-
-[Install]
-WantedBy=multi-user.target
-EOF
-enable_service ap-bootstrap.service
 
 # ─────────────────────────────────────────────────────────────
 # 7) Final tweaks & test hints

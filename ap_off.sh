@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ap-off.sh ─ Switch Orange Pi from AP → client mode
+# ap_off.sh ─ Switch Orange Pi from AP → client mode
 #   • Stops AP + services
 #   • Masks dnsmasq so NM uses its own DNS
 #   • Restores NetworkManager control of wlan0
