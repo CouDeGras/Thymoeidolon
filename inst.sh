@@ -248,7 +248,17 @@ configure_nginx_front() {
   [[ -d $REPO_STATIC ]] || {
     echo "❌ $REPO_STATIC not found (needs index.html)"; exit 1; }
 
-  rm -f /etc/nginx/conf.d/default.conf  # vendor sample vhost
+  # ── NEW: disable any shipped “default” site on Ubuntu/Mint ──────────────
+  for f in \
+      /etc/nginx/conf.d/default.conf \
+      /etc/nginx/sites-enabled/default \
+      /etc/nginx/sites-enabled/default.conf; do
+    if [[ -e $f ]]; then
+      echo "👉 Removing vendor default site: $f"
+      rm -f "$f"
+    fi
+  done
+  # -----------------------------------------------------------------------
 
   cat > "$VHOST" <<'EOF'
 server {
@@ -275,10 +285,12 @@ server {
     add_header X-Frame-Options DENY;
 }
 EOF
+
   sed -i "s|__STATIC_ROOT__|$REPO_STATIC|" "$VHOST"
 
   nginx -t && systemctl reload nginx
 }
+
 
 configure_backend_service
 configure_nginx_front
