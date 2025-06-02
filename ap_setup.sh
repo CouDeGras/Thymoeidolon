@@ -94,7 +94,7 @@ EOF
 enable_service hostapd.service
 
 # ─────────────────────────────────────────────────────────────
-# 4) dnsmasq (DHCP)
+# 4) dnsmasq (DHCP) with port 53 conflict check
 # ─────────────────────────────────────────────────────────────
 write_if_changed /etc/dnsmasq.conf 644 <<'EOF'
 interface=wlan0
@@ -103,6 +103,19 @@ dhcp-range=192.168.4.10,192.168.4.50,255.255.255.0,24h
 log-queries
 log-dhcp
 EOF
+
+# Kill rogue dnsmasq instances (e.g. from RaspAP or NM)
+echo "🔍 Checking for existing dnsmasq on port 53…"
+if ss -ltnup | grep -q ':53'; then
+  echo "⚠️  Port 53 in use — killing rogue dnsmasq (if any)…"
+  PIDS=$(ss -ltnup | awk '/:53/ && /dnsmasq/ {print $NF}' | grep -oP 'pid=\K[0-9]+')
+  for pid in $PIDS; do
+    echo "🔪 Killing dnsmasq PID $pid"
+    kill "$pid" || true
+  done
+  sleep 1
+fi
+
 enable_service dnsmasq.service
 
 # ─────────────────────────────────────────────────────────────
