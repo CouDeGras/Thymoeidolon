@@ -197,7 +197,7 @@ cat >> "$SMB_CONF" <<EOF
    directory mask = 0777
    force group = nogroup
 EOF
-systemctl restart smbd nmbd
+systemctl restart smbd nmbd nginx
 
 # ───────────────────────────────────
 # 7) enable + start services

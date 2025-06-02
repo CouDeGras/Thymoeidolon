@@ -115,6 +115,7 @@ if ss -ltnup | grep -q ':53'; then
   done
   sleep 1
 fi
+systemctl unmask dnsmasq.service 2>/dev/null || true
 
 enable_service dnsmasq.service
 
