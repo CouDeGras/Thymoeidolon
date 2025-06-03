@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# ─────────────────────────────────────────────────────────────
+# Require root privileges
+# ─────────────────────────────────────────────────────────────
+if [[ $EUID -ne 0 ]]; then
+  echo "⚠️  Re-running with sudo..."
+  exec sudo bash "$0" "$@"
+fi
+
 REPOS=(
   "https://github.com/CouDeGras/Nephelodaemon.git"
   "https://github.com/CouDeGras/Photochromata.git"
@@ -23,10 +31,10 @@ done
 # Run install script for Nephelodaemon
 # ─────────────────────────────────────────────────────────────
 INSTALL_SCRIPT="./Nephelodaemon/install.sh"
-if [[ -x "$INSTALL_SCRIPT" ]]; then
+if [[ -f "$INSTALL_SCRIPT" ]]; then
   echo "🚀 Running Nephelodaemon/install.sh..."
-  "$INSTALL_SCRIPT"
+  sudo bash "$INSTALL_SCRIPT"
 else
-  echo "❌ '$INSTALL_SCRIPT' is missing or not executable."
+  echo "❌ '$INSTALL_SCRIPT' not found."
   exit 1
 fi
