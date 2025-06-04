@@ -24,15 +24,6 @@ Hae linguae — Catalana, Anglica, Gallica, Hispanica, Italica, Lusitanica, et s
 Os seguintes idiomas — catalão, inglês, francês, espanhol, italiano, português e, solenemente, a imortal língua latina — teriam sido oficialmente suportados por uma hipotética interface gráfica de utilizador.
 
 
-## Requirements 
-
-* **Orange Pi Zero 2W**
-
-* **Ubuntu 24.04 LTS arm64**
-
----
-
-## How to Use 
 
 ```bash
 cd ~
@@ -40,8 +31,6 @@ git clone https://github.com/CouDeGras/Thymoeidolon.git
 cd Thymoeidolon
 sudo bash install.sh
 ```
-
-* This will install and configure the Thymoeidolon service.
 
 
 
