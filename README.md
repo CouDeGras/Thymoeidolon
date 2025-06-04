@@ -1,5 +1,21 @@
 # Thymoeidolon
-## Requirements · Exigences · Exigencias
+
+## Language/Langue/Lengua/Lingua
+
+**English:**  
+The project interface and documentation are officially supported in the following languages: English, French, Spanish, and ceremonially, in the immortal Latin language.
+
+**Français :**  
+L'interface du projet et la documentation sont officiellement disponibles en anglais, français, espagnol, et solennellement, dans l'immortelle langue latine.
+
+**Español:**  
+La interfaz del proyecto y la documentación están oficialmente disponibles en los siguientes idiomas: inglés, francés, español, y solemnemente, en la inmortal lengua latina.
+
+**Latine:**  
+Interfacia huius operis et documentatio his linguis publice praebentur: Anglica, Gallica, Hispanica, et solemniter, in immortali Latina lingua.
+
+
+## Requirements 
 
 * **Orange Pi Zero 2W**
 
@@ -7,17 +23,16 @@
 
 ---
 
-## How to Use · Comment utiliser · Cómo usar
+## How to Use 
 
 ```bash
 cd ~
-sudo git clone https://github.com/CouDeGras/Thymoeidolon.git
+git clone https://github.com/CouDeGras/Thymoeidolon.git
 cd Thymoeidolon
 sudo bash install.sh
 ```
 
-* **EN**: This will install and configure the Thymoeidolon service.
-* **FR** : Cela installera et configurera le service Thymoeidolon.
-* **ES**: Esto instalará y configurará el servicio Thymoeidolon.
+* This will install and configure the Thymoeidolon service.
+
 
 
