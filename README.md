@@ -4,12 +4,10 @@
 * **Orange Pi Zero 2W**
 
 * **Ubuntu 24.04 LTS arm64**
-  **or · ou · o**
-  **Linux Mint 22.1 arm64**
 
 ---
 
-## ▶️ How to Use · Comment utiliser · Cómo usar
+## How to Use · Comment utiliser · Cómo usar
 
 ```bash
 cd ~
