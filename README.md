@@ -1,5 +1,5 @@
-## Thymoeidolon
-# Requirements · Exigences · Exigencias
+# Thymoeidolon
+## Requirements · Exigences · Exigencias
 
 * **Orange Pi Zero 2W**
 
