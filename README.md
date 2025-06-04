@@ -39,6 +39,10 @@ Prinzipiell wird die mehrsprachige Unterstützung in den wichtigsten romanischen
 
 Neffens it prinsipe wurdt meartalige stipe jûn yn de wichtichste Romaanske talen, de wichtichste Germaanske talen en seremoanjeel yn de ûnstjerlike Latynske taal, om’t it projekt ûntwikkele is yn de eardere Romeinske provinsje Brittanje. Meartalige stipe wie tafoege as der in ynterface west hie.  
 
+**Nederlands: Meertalige ondersteuning**
+
+In principe wordt meertalige ondersteuning geboden in de belangrijkste Romaanse talen, de belangrijkste Germaanse talen en ceremonieel in de onsterfelijke Latijnse taal, aangezien het project is ontwikkeld in de voormalige Romeinse provincie Britannia. Meertalige ondersteuning zou zijn toegevoegd als er een interface was geweest.
+
 **Afrikaans: Meertalige ondersteuning**  
 
 In beginsel word meertalige ondersteuning verskaf in die belangrikste Romaanse tale, die belangrikste Germaanse tale en seremoniëel in die onsterflike Latynse taal, aangesien die projek ontwikkel is in die voormalige Romeinse provinsie van Brittanje. Meertalige ondersteuning sou bygevoeg gewees het as daar ’n koppelvlak was.  
