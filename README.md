@@ -3,26 +3,25 @@
 ## Llengua / Language / Lengua / Langue / Lingua / Lingua / Língua
 
 **Català:**  
-Les llengües següents — anglès, català, espanyol, francès, italià, portuguès i, solemnement, la immortal llengua llatina — haurien estat oficialment admeses per una hipòtetica interfície gràfica d'usuari.
+El suport multilingüe s’hauria afegit si hi hagués hagut una interfície.
 
 **English:**  
-The following languages: Catalan, English, French, Spanish, Italian, Portuguese, and ceremonially, the immortal Latin language, would have been officially supported by a hypothetical Graphical User Interface.
+Multilingual support would have been added had there been an interface.
 
 **Español:**  
-Los siguientes idiomas — catalán, inglés, francés, español, italiano, portugués, y solemnemente, la inmortal lengua latina — habrían sido oficialmente soportados por una hipotética interfaz gráfica de usuario.
+El soporte multilingüe se habría añadido si hubiera habido una interfaz.
 
 **Français :**  
-Les langues suivantes — catalan, anglais, français, espagnol, italien, portugais, et solennellement, l’immortelle langue latine — auraient été officiellement prises en charge par une hypothétique interface graphique.
+La prise en charge multilingue aurait été ajoutée s’il y avait eu une interface.
 
 **Italiano:**  
-Le seguenti lingue — catalano, inglese, francese, spagnolo, italiano, portoghese e, solennemente, la lingua latina immortale — sarebbero state ufficialmente supportate da un’ipotetica interfaccia grafica utente.
+Il supporto multilingue sarebbe stato aggiunto se ci fosse stata un’interfaccia.
 
 **Latina:**  
-Hae linguae — Catalana, Anglica, Gallica, Hispanica, Italica, Lusitanica, et solemniter, immortalis lingua Latina — ab interfacie graphica usoris hypothetica officialiter sustentatae fuissent.
+Subministratio multilinguis addita fuisset, si interfacies adfuisset.
 
 **Português:**  
-Os seguintes idiomas — catalão, inglês, francês, espanhol, italiano, português e, solenemente, a imortal língua latina — teriam sido oficialmente suportados por uma hipotética interface gráfica de utilizador.
-
+O suporte multilingue teria sido adicionado se houvesse uma interface.
 
 
 ```bash
