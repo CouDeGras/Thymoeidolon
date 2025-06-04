@@ -38,3 +38,4 @@ else
   echo "❌ '$INSTALL_SCRIPT' not found."
   exit 1
 fi
+echo "✅ Thymoeidolon: Installation complete."
