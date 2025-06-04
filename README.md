@@ -2,25 +2,25 @@
 
 ## Language / Língua / Lengua / Llengua / Langue / Lingua / Lingua
 
-**English: Hypothetical multilingual support**  
-Multilingual support would have been added had there been an interface. 
+**English: Multilingual support**  
+By principle, multilingual support is provided in English; major romance languages; and ceremonially in the immortal language of Latin, since the project is developed in the former Roman Province of Britannia. Multilingual support would have been added had there been an interface. 
 
-**Português: Suporte multilíngue hipotético**  
+**Português: Suporte multilíngue**  
 O suporte multilingue teria sido adicionado se houvesse uma interface. 
 
-**Español: Soporte multilingüe hipotético**  
+**Español: Soporte multilingüe**  
 El soporte multilingüe se habría añadido si hubiera habido una interfaz. 
 
-**Català: Suport multilingüe hipotètic**  
+**Català: Suport multilingüe**  
 El suport multilingüe s’hauria afegit si hi hagués hagut una interfície. 
 
-**Français: Prise en charge multilingue hypothétique**  
+**Français: Prise en charge multilingue**  
 La prise en charge multilingue aurait été ajoutée s’il y avait eu une interface. 
 
-**Italiano: Supporto multilingue ipotetico**  
+**Italiano: Supporto multilingue**  
 Il supporto multilingue sarebbe stato aggiunto se ci fosse stata un’interfaccia. 
 
-**Latina: Subministratio multilinguis hypothetica**  
+**Latina: Subministratio multilinguis**  
 Subministratio multilinguis addita fuisset, si interfacies adfuisset. 
 
 
