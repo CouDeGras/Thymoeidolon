@@ -1,24 +1,25 @@
 # Thymoeidolon
 
-## Language/Langue/Lengua/Língua/Lingua/Lingua
+## 🌐 Language / Langue / Lengua / Língua / Lingua / Lingua
 
 **English:**  
-The project interface and documentation are officially supported in the following languages: English, French, Spanish, Italian, Portuguese, and ceremonially, in the immortal Latin language.
+The following languages: English, French, Spanish, Italian, Portuguese, and ceremonially, the immortal Latin language, would have been officially supported by a hypothetical Graphical User Interface.
 
 **Français :**  
-L'interface du projet et la documentation sont officiellement disponibles en anglais, français, espagnol, italien, portugais, et solennellement, dans l'immortelle langue latine.
+Les langues suivantes — anglais, français, espagnol, italien, portugais, et solennellement, l’immortelle langue latine — auraient été officiellement prises en charge par une hypothétique interface graphique.
 
 **Español:**  
-La interfaz del proyecto y la documentación están oficialmente disponibles en los siguientes idiomas: inglés, francés, español, italiano, portugués, y solemnemente, en la inmortal lengua latina.
+Los siguientes idiomas — inglés, francés, español, italiano, portugués, y solemnemente, la inmortal lengua latina — habrían sido oficialmente soportados por una hipotética interfaz gráfica de usuario.
 
 **Português:**  
-A interface do projeto e a documentação estão oficialmente disponíveis nos seguintes idiomas: inglês, francês, espanhol, italiano, português, e solenemente, na imortal língua latina.
+Os seguintes idiomas — inglês, francês, espanhol, italiano, português e, solenemente, a imortal língua latina — teriam sido oficialmente suportados por uma hipotética interface gráfica de utilizador.
 
 **Italiano:**  
-L'interfaccia del progetto e la documentazione sono ufficialmente supportate nelle seguenti lingue: inglese, francese, spagnolo, italiano, portoghese, e solennemente, nella lingua latina immortale.
+Le seguenti lingue — inglese, francese, spagnolo, italiano, portoghese e, solennemente, la lingua latina immortale — sarebbero state ufficialmente supportate da un’ipotetica interfaccia grafica utente.
 
 **Latina:**  
-Interfacies huius operis documentatioque his linguis officialiter sustentantur: Anglica, Gallica, Hispanica, Italica, Lusitanica, et solemniter, in immortali Latina lingua.
+Hae linguae — Anglica, Gallica, Hispanica, Italica, Lusitanica, et solemniter, immortalis lingua Latina — ab interfacie graphica usoris hypothetica officialiter sustentatae fuissent.
+
 
 
 
