@@ -11,7 +11,7 @@ L'interface du projet et la documentation sont officiellement disponibles en ang
 **Español:**  
 La interfaz del proyecto y la documentación están oficialmente disponibles en los siguientes idiomas: inglés, francés, español, y solemnemente, en la inmortal lengua latina.
 
-**Latine:**  
+**Latina:**  
 Interfacia huius operis et documentatio his linguis publice praebentur: Anglica, Gallica, Hispanica, et solemniter, in immortali Latina lingua.
 
 
