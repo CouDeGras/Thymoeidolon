@@ -15,13 +15,22 @@ REPOS=(
 )
 
 # ─────────────────────────────────────────────────────────────
-# Clone repositories if not already present
+# Clone or update repositories
 # ─────────────────────────────────────────────────────────────
 for repo in "${REPOS[@]}"; do
   dir=$(basename "$repo" .git)
-  if [[ -d "$dir" ]]; then
-    echo "✅ Repository '$dir' already exists. Skipping clone."
+
+  if [[ -d "$dir" && -d "$dir/.git" ]]; then
+    echo "🔄 Updating '$dir'..."
+    (
+      cd "$dir"
+      git pull --ff-only
+    )
   else
+    if [[ -d "$dir" ]]; then
+      echo "⚠️  '$dir' exists but is not a Git repo; removing and recloning..."
+      rm -rf "$dir"
+    fi
     echo "📥 Cloning '$repo'..."
     git clone "$repo"
   fi
@@ -33,9 +42,10 @@ done
 INSTALL_SCRIPT="./Nephelodaemon/install.sh"
 if [[ -f "$INSTALL_SCRIPT" ]]; then
   echo "🚀 Running Nephelodaemon/install.sh..."
-  sudo bash "$INSTALL_SCRIPT"
+  bash "$INSTALL_SCRIPT"
 else
   echo "❌ '$INSTALL_SCRIPT' not found."
   exit 1
 fi
+
 echo "✅ Thymoeidolon: Installation complete."

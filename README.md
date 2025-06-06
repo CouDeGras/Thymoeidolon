@@ -1,11 +1,15 @@
 # Thymoeidolon
 
 
-## Language / Língua / Lengua / Llengua / Langue / Lingua / Lingua / Sprache / Taal / Taal / Taal / Språk / Språk / Språk
+## Language / Lingua / Língua / Lengua / Llengua / Langue / Lingua / Sprache / Taal / Taal / Taal / Språk / Språk / Språk
 
 **English: Multilingual support**  
 
-By principle, multilingual support is provided in major Romance languages; major Germanic languages; and ceremonially in the immortal language of Latin, since the project is developed in the former Roman Province of Britannia. Multilingual support would have been added had there been an interface.  
+In principle, multilingual support is provided in major Romance languages; major Germanic languages; and ceremonially in the immortal language of Latin, since the project is developed in the former Roman Province of Britannia. Multilingual support would have been added had there been an interface.  
+
+**Latina: Subministratio multilinguis**  
+
+Principio, subministratio multilinguis linguis Romanicis praecipuis, linguis Germanicis praecipuis, ac sollemniter lingua Latina immortali praebetur, cum consilium in provincia Romana olim Britannia appellata excultum sit. Subministratio multilinguis addita fuisset, si interfacies adfuisset.  
 
 **Português: Suporte multilíngue**  
 
@@ -26,10 +30,6 @@ Par principe, la prise en charge multilingue est assurée dans les principales l
 **Italiano: Supporto multilingue**  
 
 Per principio, il supporto multilingue è fornito nelle principali lingue romanze, nelle principali lingue germaniche e, cerimonialmente, nell’immortale lingua latina, poiché il progetto è stato sviluppato nell’antica provincia romana della Britannia. Il supporto multilingue sarebbe stato aggiunto se ci fosse stata un’interfaccia.  
-
-**Latina: Subministratio multilinguis**  
-
-Principio, subministratio multilinguis linguis Romanicis praecipuis, linguis Germanicis praecipuis, ac sollemniter lingua Latina immortali praebetur, cum consilium in provincia Romana olim Britannia appellata excultum sit. Subministratio multilinguis addita fuisset, si interfacies adfuisset.  
 
 **Deutsch: Mehrsprachige Unterstützung**  
 
