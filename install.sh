@@ -10,8 +10,9 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 REPOS=(
-  "https://github.com/CouDeGras/Nephelodaemon.git"
-  "https://github.com/CouDeGras/Photochromata.git"
+  "https://github.com/CouDeGras/Aktinoplanesiographema.git"
+  "https://github.com/CouDeGras/Chromatodiethegraphema.git"
+  "https://github.com/CouDeGras/Merosyndesmogramma.git"
 )
 
 # ─────────────────────────────────────────────────────────────
@@ -37,15 +38,19 @@ for repo in "${REPOS[@]}"; do
 done
 
 # ─────────────────────────────────────────────────────────────
-# Run install script for Nephelodaemon
+# Run install script in each cloned repo if found
 # ─────────────────────────────────────────────────────────────
-INSTALL_SCRIPT="./Nephelodaemon/install.sh"
-if [[ -f "$INSTALL_SCRIPT" ]]; then
-  echo "🚀 Running Nephelodaemon/install.sh..."
-  bash "$INSTALL_SCRIPT"
-else
-  echo "❌ '$INSTALL_SCRIPT' not found."
-  exit 1
-fi
+for repo in "${REPOS[@]}"; do
+  dir=$(basename "$repo" .git)
+  install_path="$dir/install.sh"
 
-echo "✅ Thymoeidolon: Installation complete."
+  if [[ -f "$install_path" ]]; then
+    echo "🚀 Running '$install_path'..."
+    bash "$install_path"
+  else
+    echo "ℹ️  No install script found in '$dir', skipping..."
+  fi
+done
+
+echo "✅ All installations (if any) complete."
+
