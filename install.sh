@@ -12,7 +12,7 @@ fi
 REPOS=(
   "https://github.com/CouDeGras/Aktinoplanesiographema.git"
   "https://github.com/CouDeGras/Chromatodiethegraphema.git"
-  "https://github.com/CouDeGras/Merosyndesmogramma.git"
+  "https://github.com/CouDeGras/Plegmasyndesmogramma.git"
 )
 
 # ─────────────────────────────────────────────────────────────
