@@ -10,8 +10,8 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 REPOS=(
-  "https://github.com/CouDeGras/Aktinoplanesiographema.git"
-  "https://github.com/CouDeGras/Chromatodiethegraphema.git"
+  "https://github.com/CouDeGras/Aktinoplanesiographe.git"
+  "https://github.com/CouDeGras/Chromatodiethegraphe.git"
   "https://github.com/CouDeGras/Plegmasyndesmogramma.git"
 )
 
